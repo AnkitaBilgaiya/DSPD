@@ -1,81 +1,68 @@
 #include <stdio.h>
-#include <stdlib.h>
+#define MAX 30
 
-struct Edge {
-    int src, dest, weight;
-};
+int parent[MAX];
 
-struct Subset {
-    int parent, rank;
-};
-
-int find(struct Subset subsets[], int i) {
-    if (subsets[i].parent != i)
-        subsets[i].parent = find(subsets, subsets[i].parent);
-    return subsets[i].parent;
+int find(int i) {
+    while (parent[i] != i)
+        i = parent[i];
+    return i;
 }
 
-void Union(struct Subset subsets[], int x, int y) {
-    int xroot = find(subsets, x);
-    int yroot = find(subsets, y);
-
-    if (subsets[xroot].rank < subsets[yroot].rank)
-        subsets[xroot].parent = yroot;
-    else if (subsets[xroot].rank > subsets[yroot].rank)
-        subsets[yroot].parent = xroot;
-    else {
-        subsets[yroot].parent = xroot;
-        subsets[xroot].rank++;
-    }
+void union1(int i, int j) {
+    int a = find(i);
+    int b = find(j);
+    parent[a] = b;
 }
 
 int main() {
-    int V, E;
-    printf("Enter number of vertices: ");
-    scanf("%d", &V);
-    printf("Enter number of edges: ");
-    scanf("%d", &E);
+    int n, cost[MAX][MAX];
+    int i, j, a = -1, b = -1, u, v;
+    int mincost = 0, ne = 1;
 
-    struct Edge edges[E];
-    printf("Enter edges (source destination weight):\n");
-    for (int i = 0; i < E; i++) {
-        scanf("%d %d %d", &edges[i].src, &edges[i].dest, &edges[i].weight);
+    printf("Enter the number of nodes: ");
+    scanf("%d", &n);
+
+    printf("Enter the cost adjacency matrix:\n");
+    for (i = 1; i <= n; i++) {
+        for (j = 1; j <= n; j++) {
+            scanf("%d", &cost[i][j]);
+            if (cost[i][j] == 0)
+                cost[i][j] = 999;
+        }
     }
 
-    for (int i = 0; i < E - 1; i++) {
-        for (int j = 0; j < E - i - 1; j++) {
-            if (edges[j].weight > edges[j + 1].weight) {
-                struct Edge temp = edges[j];
-                edges[j] = edges[j + 1];
-                edges[j + 1] = temp;
+    for (i = 1; i <= n; i++)
+        parent[i] = i;
+
+    printf("The edges of the Minimum Cost Spanning Tree:\n");
+
+    while (ne < n) {
+        int min = 999;
+
+        for (i = 1; i <= n; i++) {
+            for (j = 1; j <= n; j++) {
+                if (cost[i][j] < min) {
+                    min = cost[i][j];
+                    a = i;
+                    b = j;
+                }
             }
         }
-    }
 
-    struct Subset subsets[V];
-    for (int v = 0; v < V; v++) {
-        subsets[v].parent = v;
-        subsets[v].rank = 0;
-    }
+        u = find(a);
+        v = find(b);
 
-    int e = 0;
-    int i = 0;
-    int minCost = 0;
-    printf("\nEdges in the Minimum Spanning Tree are:\n");
-
-    while (e < V - 1 && i < E) {
-        struct Edge next = edges[i++];
-        int x = find(subsets, next.src);
-        int y = find(subsets, next.dest);
-
-        if (x != y) {
-            printf("%d -- %d == %d\n", next.src, next.dest, next.weight);
-            minCost += next.weight;
-            Union(subsets, x, y);
-            e++;
+        if (u != v) {
+            printf("Edge %d: (%d - %d) = %d\n", ne++, a, b, min);
+            mincost += min;
+            union1(u, v);
         }
+
+        cost[a][b] = cost[b][a] = 999;  
     }
 
-    printf("Minimum cost of Spanning Tree = %d\n", minCost);
+    printf("Minimum cost = %d\n", mincost);
+
     return 0;
 }
